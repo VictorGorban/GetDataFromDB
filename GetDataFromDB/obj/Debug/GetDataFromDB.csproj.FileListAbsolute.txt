@@ -1,4 +1,3 @@
-C:\Users\VictorGorban\source\repos\GetDataFromDB\GetDataFromDB\obj\Debug\GetDataFromDB.csprojAssemblyReference.cache
 C:\Users\VictorGorban\source\repos\GetDataFromDB\GetDataFromDB\obj\Debug\GetDataFromDB.Properties.Resources.resources
 C:\Users\VictorGorban\source\repos\GetDataFromDB\GetDataFromDB\obj\Debug\GetDataFromDB.csproj.GenerateResource.cache
 C:\Users\VictorGorban\source\repos\GetDataFromDB\GetDataFromDB\obj\Debug\GetDataFromDB.csproj.CoreCompileInputs.cache

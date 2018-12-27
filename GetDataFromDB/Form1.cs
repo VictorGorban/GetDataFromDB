@@ -19,14 +19,30 @@ namespace GetDataFromDB
             presenter = new NewsPresenter(this);
         }
 
-        public void Update(BindingList<News> news)
+        public void Update(IList<News> news)
         {
-            dataView.DataSource = news;
+            dataView.Rows.Clear();
+            foreach(var n in news)
+            {
+                dataView.Rows.Add(n.Title, n.Description, n.Source);
+            }
+            dataView.Update();
+            if(!dataView.Visible)
+                dataView.Visible = true;
         }
 
         private void dataView_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
             
+        }
+
+        private async void button1_Click(object sender, EventArgs e)
+        {
+            var b = sender as Button;
+            b.Enabled = false;
+            await presenter.db.UpdateNewsRandom();
+            await presenter.db.UpdateSubscribers();
+            b.Enabled = true;
         }
     }
 }

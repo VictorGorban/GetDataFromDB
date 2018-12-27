@@ -5,111 +5,122 @@ using System.IO;
 using System.Data;
 using System.Data.Common;
 using System.Timers;
+using System;
 
 namespace GetDataFromDB
 {
     public class LocalDB
     {
-        private List<News> news;
-        NewsPresenter newsPresenter;
+        public List<News> news { get; private set; } = new List<News>();
+        List<NewsPresenter> newsPresenters = new List<NewsPresenter>();
 
-        static LocalDB db;
+        static LocalDB db = null;
 
         string pathToDB = "NewsDB.sqlite";
         //SQLiteConnection connection;
-        SQLiteCommand command;
-        private LocalDB(NewsPresenter presenter = null)
+        private LocalDB()
         {
-            newsPresenter = presenter;
-            if (!File.Exists(pathToDB))
-            {
-                SQLiteConnection.CreateFile(pathToDB);
-                try
-                {
-                    using (var connection = new SQLiteConnection("Data Source=" + pathToDB + ";Version=3"))
-                    {
-                        connection.Open();
-                        command.Connection = connection;
-                        command.CommandText = "CREATE TABLE IF NOT EXISTS News (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, description TEXT)";
-                        command.ExecuteNonQueryAsync();
-
-                        news.Add(new News("В «банках ДНР» решили выдавать кредиты", "Донецкие новости"));
-                        news.Add(new News("В Мариуполе судья попался на взятке", "Новостной портал ZI"));
-                        news.Add(new News("В Украине задержали продавца пластида: фото", "Реал"));
-
-                        command.CommandText = "INSERT INTO News(title, description) VALUES(?,?)";
-
-                        foreach (News n in news)
-                        {
-                            DbParameter Field1 = command.CreateParameter();
-                            DbParameter Field2 = command.CreateParameter();
-                            command.Parameters.Add(Field1);
-                            command.Parameters.Add(Field2);
-                            Field1.Value = n.Title;
-                            Field2.Value = n.Description;
-                        }
-                        StartAutoUpdate();
-                    }
-                }
-                catch (SQLiteException)
-                {
-                    System.Windows.Forms.MessageBox.Show("We have a problem with DB");
-                }
-            }
         }
-
 
         public static LocalDB GetInstance()
         {
-            return db!=null?db:new LocalDB();
+            return db != null ? db : db = new LocalDB();
         }
 
         public LocalDB SubscribeOn(NewsPresenter presenter)
         {
-            newsPresenter = presenter;
+            newsPresenters.Add(presenter);
             return this;
         }
 
-        public async void UpdateSubscribers()
+        public async Task UpdateNewsRandom()
         {
-            news = await getNewsAsync();
-            newsPresenter.updateMe(news);
-        }
+            news.Clear();
 
-        public void StartAutoUpdate()
-        {
-            var Timer = new System.Timers.Timer(5000)
+            while (File.Exists(pathToDB))
             {
-                AutoReset = true,
-                Enabled = true,
-            };
-            Timer.Elapsed += OnTimedEvent;
-            Timer.Start();
+                pathToDB += "1";
+            }
+            SQLiteConnection.CreateFile(pathToDB);
+
+            /*if ()
+            {
+                SQLiteConnection.ClearAllPools();
+                File.Delete(pathToDB);
+            }*/
 
 
+            try
+            {
+                using (var connection = new SQLiteConnection("Data Source=" + pathToDB + ";Version=3"))
+                {
+                    connection.Open();
+                    using (var command = new SQLiteCommand(connection))
+                    {
+                        command.Connection = connection;
+                        command.CommandText = "CREATE TABLE IF NOT EXISTS News (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, description TEXT, source TEXT)";
+                        await command.ExecuteNonQueryAsync();
+                    }
+                    var numNews = new Random().Next(1, 10);
+                    for (var i = 0; i < numNews; i++)
+                    {
+                        news.Add(await News.GetRandom());
+                    }
+                }
+
+                foreach (News n in news)
+                {
+                    using (var connection = new SQLiteConnection("Data Source=" + pathToDB + ";Version=3"))
+                    {
+                        connection.Open();
+
+                        using (var command = new SQLiteCommand(connection))
+                        {
+                            command.CommandText = "INSERT INTO News(title, description, source) VALUES(?,?,?)";
+                            DbParameter Field1 = command.CreateParameter();
+                            DbParameter Field2 = command.CreateParameter();
+                            DbParameter Field3 = command.CreateParameter();
+                            command.Parameters.Add(Field1);
+                            command.Parameters.Add(Field2);
+                            command.Parameters.Add(Field3);
+                            Field1.Value = n.Title;
+                            Field2.Value = n.Description;
+                            Field3.Value = n.Source;
+                            await command.ExecuteNonQueryAsync();
+                        }
+                    }
+                }
+            }
+            catch (SQLiteException)
+            {
+                System.Windows.Forms.MessageBox.Show("We have a problem with DB");
+            }
         }
 
-        private void OnTimedEvent(object source, ElapsedEventArgs e)
+        public async Task UpdateSubscribers()
         {
-            UpdateSubscribers();
+            await getNewsAsync();
+
+            foreach (var p in newsPresenters)
+            {
+                p.notify();
+            }
         }
 
-        private async Task<List<News>> getNewsAsync()
+        public async Task getNewsAsync()
         {
-            var query = "SELECT * FROM News";
-            command.CommandText = query;
-
-            Task<List<News>> task = new Task<List<News>>(getNews);
+            Task task = new Task(getNews);
             task.Start();
-            return await task;
+            await task;
         }
 
-        private List<News> getNews()
+        public void getNews()
         {
             var query = "SELECT * FROM News";
-            command.CommandText = query;
             using (var connection = new SQLiteConnection("Data Source=" + pathToDB + ";Version=3"))
             {
+                connection.Open();
+
                 var adapter = new SQLiteDataAdapter(query, connection);
                 var table = new DataTable();
 
@@ -120,12 +131,12 @@ namespace GetDataFromDB
                 foreach (DataRow row in table.Rows)
                 {
                     news.Add(new News(
-                        row.Field<string>(0),
-                        row.Field<string>(1)
+                        row.Field<string>(1),
+                        row.Field<string>(2),
+                        row.Field<string>(3)
                         ));
                 }
             }
-            return news;
         }
     }
 }
