@@ -7,13 +7,29 @@ namespace GetDataFromDB
 {
     public class NewsPresenter
     {
-        NewsView view;
+        List<NewsView> views = new List<NewsView>();
         public List<News> news;
         public LocalDB db;
 
-        private void updateView()
+        private void updateViews()
         {
-            view.Update();
+            foreach (var view in views)
+            {
+                view.Update(news);
+            }
+        }
+
+        public NewsPresenter Unsubscribe(NewsView view)
+        {
+            views.Remove(view);
+            return this;
+        }
+
+        public NewsPresenter Subscribe(NewsView view)
+        {
+            if (!views.Contains(view))
+                views.Add(view);
+            return this;
         }
 
         public async Task getNews()
@@ -21,16 +37,15 @@ namespace GetDataFromDB
             await db.UpdateNewsRandom();
         }
 
-        public NewsPresenter(NewsView view)
+        public NewsPresenter()
         {
-            this.view = view;
-            db = LocalDB.GetInstance().SubscribeOn(this);
+            db = LocalDB.GetInstance().Subscribe(this);
         }
 
         public void notify()
         {
             news = LocalDB.GetInstance().news;
-            view.Update(news);
+            updateViews();
         }
     }
 }

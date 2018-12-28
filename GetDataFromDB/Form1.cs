@@ -12,11 +12,10 @@ namespace GetDataFromDB
 {
     public partial class NewsView : Form
     {
-        NewsPresenter presenter;
+        public NewsPresenter presenter;
         public NewsView()
         {
             InitializeComponent();
-            presenter = new NewsPresenter(this);
         }
 
         public void Update(IList<News> news)
@@ -43,6 +42,11 @@ namespace GetDataFromDB
             await presenter.db.UpdateNewsRandom();
             await presenter.db.UpdateSubscribers();
             b.Enabled = true;
+        }
+
+        private void NewsView_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            presenter.Unsubscribe(this);
         }
     }
 }

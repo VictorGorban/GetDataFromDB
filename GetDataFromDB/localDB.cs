@@ -27,9 +27,18 @@ namespace GetDataFromDB
             return db != null ? db : db = new LocalDB();
         }
 
-        public LocalDB SubscribeOn(NewsPresenter presenter)
+        public LocalDB Subscribe(NewsPresenter presenter)
         {
-            newsPresenters.Add(presenter);
+            if (!newsPresenters.Contains(presenter))
+            {
+                newsPresenters.Add(presenter);
+            }
+            return this;
+        }
+
+        public LocalDB UnSubscribe(NewsPresenter presenter)
+        {
+            newsPresenters.Remove(presenter);
             return this;
         }
 
@@ -42,13 +51,6 @@ namespace GetDataFromDB
                 pathToDB += "1";
             }
             SQLiteConnection.CreateFile(pathToDB);
-
-            /*if ()
-            {
-                SQLiteConnection.ClearAllPools();
-                File.Delete(pathToDB);
-            }*/
-
 
             try
             {

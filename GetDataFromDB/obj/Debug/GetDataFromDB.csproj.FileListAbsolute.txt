@@ -17,3 +17,4 @@ C:\Users\VictorGorban\source\repos\GetDataFromDB\GetDataFromDB\obj\Debug\GetData
 C:\Users\VictorGorban\source\repos\GetDataFromDB\GetDataFromDB\obj\Debug\GetDataFromDB.exe
 C:\Users\VictorGorban\source\repos\GetDataFromDB\GetDataFromDB\obj\Debug\GetDataFromDB.pdb
 C:\Users\VictorGorban\source\repos\GetDataFromDB\GetDataFromDB\obj\Debug\GetDataFromDB.NewsView.resources
+C:\Users\VictorGorban\source\repos\GetDataFromDB\GetDataFromDB\obj\Debug\GetDataFromDB.csprojAssemblyReference.cache
